@@ -1,0 +1,44 @@
+name: Build APK from ZIP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Unzip Code
+      run: unzip -q *.[zZ][iI][pP] -d project_code
+
+    - name: Build APK
+      run: |
+        # Find the root folder containing the project settings
+        BUILD_DIR=$(dirname $(find project_code -name "settings.gradle*" | head -n 1))
+        cd "$BUILD_DIR"
+        
+        # Forge the missing debug.keystore file exactly where Gradle expects it
+        keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
+        
+        # Build the application
+        if [ -f "gradlew" ]; then
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        else
+          gradle assembleDebug
+        fi
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: My-Android-App
+        path: '**/*.apk'
