@@ -26,16 +26,15 @@ jobs:
         BUILD_DIR=$(dirname $(find project_code -name "settings.gradle*" | head -n 1))
         cd "$BUILD_DIR"
         
-        # Forge the missing debug.keystore file exactly where Gradle expects it
+        # Forge the missing debug.keystore exactly where Gradle expects it
         keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
         
-        # Build the application using the wrapper if present, otherwise global gradle
-        if [ -f "gradlew" ]; then
-          chmod +x gradlew
-          ./gradlew assembleDebug
-        else
-          gradle assembleDebug
-        fi
+        # Delete the corrupted AI-generated wrapper files to prevent crashes
+        rm -rf gradle/wrapper/gradle-wrapper.jar
+        rm -f gradlew gradlew.bat
+        
+        # Build the application using the Ubuntu server's official global Gradle
+        gradle assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
