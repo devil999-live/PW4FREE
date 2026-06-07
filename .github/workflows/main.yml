@@ -29,7 +29,7 @@ jobs:
         # Forge the missing debug.keystore file exactly where Gradle expects it
         keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
         
-        # Build the application
+        # Build the application using the wrapper if present, otherwise global gradle
         if [ -f "gradlew" ]; then
           chmod +x gradlew
           ./gradlew assembleDebug
